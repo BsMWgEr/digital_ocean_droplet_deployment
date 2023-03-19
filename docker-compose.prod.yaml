@@ -1,0 +1,42 @@
+version: "3.9"
+services:
+  # watchtower:
+  #  image: index.docker.io/containrrr/watchtower:latest
+  #  restart: always
+  #  volumes:
+  #    - /var/run/docker.sock:/var/run/docker.sock
+  #    - /root/.docker/config.json:/config.json
+  #  command: --interval 30
+  #  profiles:
+  #    - app
+  app:
+    image: index.docker.io/jmcgaha/CHANGE_TO_NEW_DOCKER_REPO:latest
+    restart: always
+    env_file: ./.env
+    container_name: CHANGE_TO_NEW_DOCKER_REPO
+    platform: linux/amd64
+    environment:
+      - PORT=8000
+    ports:
+      - "8000:8000"
+    expose:
+      - 8000
+    volumes:
+      - ./certs:/app/certs
+    profiles:
+      - app
+  redis:
+    image: redis
+    restart: always
+    ports:
+      - "6379:6379"
+    expose:
+        - 6379
+    volumes:
+        - redis_data:/data
+    entrypoint: redis-server --appendonly yes
+    profiles:
+      - redis
+
+volumes:
+    redis_data:

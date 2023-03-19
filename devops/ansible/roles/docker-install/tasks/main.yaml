@@ -1,0 +1,48 @@
+- name: Update APt Cache
+  apt:
+    update_cache: yes
+
+- name: Install Sys Packages
+  apt:
+    name: "{{ item }}"
+    state: latest
+  with_items:
+    - curl
+    - git
+    - build-essential
+    - python3-dev
+    - python3-pip
+    - python3-venv
+
+- name: Grab Docker Install Script
+  get_url:
+    url: https://get.docker.com
+    dest: /tmp/get-docker.sh
+    mode: 0755
+  notify: exec docker script
+
+- name: Verify Docker Command
+  shell: command -v docker >/dev/null 2>&1
+  ignore_errors: true
+  register: docker_exists
+
+- debug: msg="{{ docker_exists.rc }}"
+
+
+- name: Tigger Docker Install Script
+  shell: echo "Docker needs to be installed"
+  when: docker_exists.rc != 0
+  notify: exec docker script
+
+- name: Verify Docker Compose Command
+  shell: command -v docker compose >/dev/null 2>&1
+  ignore_errors: true
+  register: docker_compose_exists
+
+- debug: msg="{{ docker_compose_exists.rc }}"
+
+
+- name: Tigger Docker Compose Install Script
+  shell: echo "Docker Compose needs to be installed"
+  when: docker_compose_exists.rc != 0
+  notify: install docker compose

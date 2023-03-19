@@ -1,0 +1,23 @@
+---
+- hosts: webapps
+  become: yes
+  roles:
+    - roles/docker-install
+    - roles/django-app
+  vars_files:
+    - vars/main.yaml
+  tasks:
+    - name: Login to Docker via vars/main.yaml
+      shell: "echo docker login -u {{ docker_username }} -p {{ docker_token }}"
+    - name: Run Django App With Docker Compose
+      shell: echo "Running Django App with Docker Compose"
+      notify: docker-compose start django app
+    - name: Force Rebuild
+      shell: echo "Rebuilding..."
+      notify: docker-compose force rebuild django app
+
+
+# - hosts: webapps
+#   become: yes
+#   roles:
+#     - roles/nginx-lb

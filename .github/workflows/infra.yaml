@@ -1,0 +1,179 @@
+name: 4 - Apply Infrastructure via Terraform and Ansible
+
+on:
+  workflow_call:
+    secrets:
+      DATABASE_BACKEND:
+        required: true
+      DJANGO_DEBUG:
+        required: true
+#      ALLOWED_HOST:
+#        required: false
+      DB_CERT_FILE:
+        required: true
+      DJANGO_SECRET_KEY:
+        required: true
+      DJANGO_VM_COUNT:
+        required: true
+      DJANGO_STORAGE_SERVICE:
+        required: true
+      DOCKER_APPNAME:
+         required: true
+      DOCKERHUB_PASSWORD:
+        required: true
+      DOCKERHUB_USERNAME:
+        required: true
+      OBJECT_STORAGE_REGION:
+        required: true
+      OBJECT_STORAGE_ACCESS_KEY:
+        required: true
+      OBJECT_STORAGE_SECRET_KEY:
+        required: true
+      DEVOPS_IMAGE:
+        required: true
+      OBJECT_STORAGE_DEVOPS_BUCKET:
+        required: true
+      OBJECT_STORAGE_DEVOPS_TF_KEY:
+        required: true
+      OBJECT_STORAGE_DEVOPS_ENDPOINT:
+        required: true
+      OBJECT_STORAGE_DEVOPS_REGION:
+        required: true
+      OBJECT_STORAGE_DEVOPS_ACCESS_KEY:
+        required: true
+      OBJECT_STORAGE_DEVOPS_SECRET_KEY:
+        required: true
+      POSTGRES_DB:
+        required: true
+      POSTGRES_USER:
+        required: true
+      POSTGRES_PASSWORD:
+        required: true
+      POSTGRES_PORT:
+        required: true
+      POSTGRES_HOST:
+        required: true
+      OBJECT_STORAGE_BUCKET:
+        required: true
+      OBJECT_STORAGE_PA_TOKEN:
+        required: true
+      DO_SSH_KEY_ID:
+        required: true
+      # SSH_PUB_KEY:
+      #   required: true
+      SSH_DEVOPS_KEY_PUBLIC:
+        required: true
+      SSH_DEVOPS_KEY_PRIVATE:
+        required: true
+  workflow_dispatch:
+
+jobs:
+   terraform_ansible:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.1.9
+      - name: Add Terraform Backend for S3
+        run: |
+          cat << EOF > devops/tf/backend
+          skip_credentials_validation = true
+          skip_region_validation = true
+          bucket="${{ secrets.OBJECT_STORAGE_DEVOPS_BUCKET }}"
+          key="${{ secrets.OBJECT_STORAGE_DEVOPS_TF_KEY }}"
+          region="${{ secrets.OBJECT_STORAGE_DEVOPS_REGION }}"
+          endpoint="${{ secrets.OBJECT_STORAGE_DEVOPS_ENDPOINT }}"
+          access_key="${{ secrets.OBJECT_STORAGE_DEVOPS_ACCESS_KEY }}"
+          secret_key="${{ secrets.OBJECT_STORAGE_DEVOPS_SECRET_KEY }}"
+          EOF
+      - name: Add Terraform TFVars
+        run: |
+          cat << EOF > devops/tf/terraform.tfvars
+          do_pa_token="${{ secrets.OBJECT_STORAGE_PA_TOKEN }}"
+          authorized_key="${{ secrets.DO_SSH_KEY_ID }}"
+          app_instance_vm_count="${{ secrets.DJANGO_VM_COUNT }}"
+          do_image="${{ secrets.DEVOPS_IMAGE }}"
+          EOF
+      - name: Add DB Cert File
+        run: |
+          mkdir -p certs
+          cat << EOF > certs/db.crt
+          ${{ secrets.DB_CERT_FILE }}
+          EOF
+      # - name: Terraform Init
+      #   run: terraform -chdir=./devops/tf init -backend-config=backend
+      # - name: Terraform Validate
+      #   run: terraform -chdir=./devops/tf validate -no-color
+      # - name: Terraform Apply Changes
+      #   run: terraform -chdir=./devops/tf apply -auto-approve
+      - name: Setup Python 3.10
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.10"
+      - name: Install Ansible
+        run: |
+          python3.10 -m pip install pip --upgrade
+    #      python3.10 -m pip install ansible
+      - name: Add Prod ENV File
+        run: |
+          cat << EOF >> .env.prod
+          DJANGO_SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }}
+          DJANGO_DEBUG=${{ secrets.DJANGO_DEBUG }}
+          DJANGO_STORAGE_SERVICE=${{ secrets.DJANGO_STORAGE_SERVICE }}
+          DATABASE_BACKEND="${{ secrets.DATABASE_BACKEND }}"
+          POSTGRES_DB=${{ secrets.POSTGRES_DB }}
+          POSTGRES_USER=${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_PORT=${{ secrets.POSTGRES_PORT }}
+          POSTGRES_HOST=${{ secrets.POSTGRES_HOST }}
+          DJANGO_STORAGE_SERVICE=${{ secrets.DJANGO_STORAGE_SERVICE }}
+          OBJECT_STORAGE_BUCKET=${{ secrets.OBJECT_STORAGE_BUCKET }}
+          OBJECT_STORAGE_REGION=${{ secrets.OBJECT_STORAGE_REGION }}
+          OBJECT_STORAGE_ACCESS_KEY=${{ secrets.OBJECT_STORAGE_ACCESS_KEY }}
+          OBJECT_STORAGE_SECRET_KEY=${{ secrets.OBJECT_STORAGE_SECRET_KEY }}
+          OBJECT_STORAGE_DEVOPS_BUCKET=${{ secrets.OBJECT_STORAGE_DEVOPS_BUCKET }}
+          OBJECT_STORAGE_DEVOPS_REGION=${{ secrets.OBJECT_STORAGE_DEVOPS_REGION }}
+          OBJECT_STORAGE_DEVOPS_ENDPOINT=${{ secrets.OBJECT_STORAGE_DEVOPS_ENDPOINT }}
+          OBJECT_STORAGE_DEVOPS_ACCESS_KEY=${{ secrets.OBJECT_STORAGE_DEVOPS_ACCESS_KEY }}
+          OBJECT_STORAGE_DEVOPS_SECRET_KEY=${{ secrets.OBJECT_STORAGE_DEVOPS_SECRET_KEY }}
+          EOF
+      - name: Add SSH Public Key
+        run: |
+          mkdir devops/ansible/devops-key
+          cat << EOF > devops/ansible/devops-key/tf-github.pub
+          ${{ secrets.SSH_DEVOPS_KEY_PUBLIC }}
+          EOF
+      - name: Add SSH Private Key
+        run: |
+          cat << EOF > devops/ansible/devops-key/tf-github
+          ${{ secrets.SSH_DEVOPS_KEY_PRIVATE }}
+          EOF
+      - name: Update devops private key permissions
+        run: chmod 0400 devops/ansible/devops-key/tf-github
+      - name: Add Ansible Vars File
+        run: |
+          mkdir devops/ansible/vars
+          cat << EOF > devops/ansible/vars/main.yaml
+          ---
+          docker_username: ${{ secrets.DOCKERHUB_USERNAME }}
+          docker_token: ${{ secrets.DOCKERHUB_PASSWORD }}
+          docker_appname: ${{ secrets.DOCKER_APPNAME }}
+          EOF
+      - name: Add Ansible Config File
+        run: |
+          cat << EOF > devops/ansible/ansible.cfg
+          [defaults]
+          ansible_python_interpreter=/usr/bin/python3
+          deprecation_warnings=False
+          inventory=./inventory.ini
+          remote_user=root
+          host_key_checking=False
+          private_key_file=./devops-key/tf-github
+          retries=2
+          EOF
+      # - name: Run Ansible Playbook
+      #   run: |
+      #     ANSIBLE_CONFIG=devops/ansible/ansible.cfg ansible-playbook devops/ansible/main.yaml

@@ -1,0 +1,54 @@
+name: 3 - Collect Static
+
+on:
+  workflow_call:
+    secrets:
+      DJANGO_SECRET_KEY:
+        required: true
+      DJANGO_DEBUG:
+        required: true
+      OBJECT_STORAGE_BUCKET:
+        required: true
+      OBJECT_STORAGE_REGION:
+        required: true
+      OBJECT_STORAGE_ACCESS_KEY:
+        required: true
+      OBJECT_STORAGE_SECRET_KEY:
+        required: true
+      DATABASE_BACKEND:
+        required: true
+      DJANGO_STORAGE_SERVICE:
+        required: true
+      DJANGO_ROOT_NAME:
+        required: true
+  workflow_dispatch:
+
+
+jobs:
+  collect_static:
+    runs-on: ubuntu-latest
+    env:
+      DJANGO_DEBUG: ${{ secrets.DJANGO_DEBUG }}
+      GITHUB_ACTIONS: true
+      DJANGO_SECRET_KEY: "${{ secrets.DJANGO_SECRET_KEY }}"
+      DATABASE_BACKEND: "${{ secrets.DATABASE_BACKEND }}"
+      DJANGO_STORAGE_SERVICE: "${{ secrets.DJANGO_STORAGE_SERVICE }}"
+      DJANGO_ROOT_NAME: "${{ secrets.DJANGO_ROOT_NAME }}"
+      OBJECT_STORAGE_BUCKET: "${{ secrets.OBJECT_STORAGE_BUCKET }}"
+      OBJECT_STORAGE_REGION: "${{ secrets.OBJECT_STORAGE_REGION }}"
+      OBJECT_STORAGE_ACCESS_KEY: "${{ secrets.OBJECT_STORAGE_ACCESS_KEY }}"
+      OBJECT_STORAGE_SECRET_KEY: "${{ secrets.OBJECT_STORAGE_SECRET_KEY }}"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Setup Python 3.10
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.10"
+      - name: Install Requirements
+        run: |
+          python3 -m pip install pip --upgrade
+          python3 -m pip install -r requirements.txt
+      - name: Run Collect Static
+        run: |
+          python manage.py collectstatic --noinput
