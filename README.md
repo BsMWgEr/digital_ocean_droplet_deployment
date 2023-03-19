@@ -2,31 +2,42 @@ New items checklist:
     - Create new Virtual Environment
         - python3 -m venv venv .
         - source venv/bin/activate
+        
     - Install requirements.txt
         - pip install -r requirements.txt
+
     - Create new Django project
         - django-admin startproject PROJECT_NAME
+
     - Update the settings file with template
+
     - Move the dbs directory and storages directory to your new django app root directory
         - dbs --> to new django root dir
         - storages --> to new django root dir
+
     - Create .env and .env.prod
         - Copy the variables to the file; update variables accordingly as project is created
+
     - Change config/entrypoint.sh to correct root dir name
         - Change this in entrypoint.sh to your new root dir name --> change_entrypoint_sh_.wsgi:application
+
     - Change image and container name at docker-compose.prod.yaml
         - image should be the new docker repo name and the root dir name
         - container name should be the same as image, docker repo, and root dir name
+
     - Variable platform is set to linux/amd64 because mac silicon has an issue with this??
         - No better workaround as of yet
+
     - Create new database
         - Permissions must be set properly to new users otherwise use default
     
     - Create new object storage bucket
         - This can be done programatically with terraform or ansible; access keys can be reused
+
     - Generate SSH key pair
         THis needs attention in the deployment pipeline
         - currently causing a login issue with ansible
+
     - Add SSH public key to Digital Ocean
         - ssh-keygen -t rsa -b 4096
         - ssh-keygen -t ed25519 
@@ -78,6 +89,13 @@ with the following variables:
     authorized_key=""
     app_instance_vm_count="1"
     do_image=""   # ex --> ubuntu-20-04-x64
+
+A devops/ansible/vars directory is required with the file main.yaml
+with the following variables:
+    ---
+    docker_username: jmcgaha
+    docker_token: 
+    docker_appname: recipe-book
 
 A ansible.cfg file is required in the devops/ansible directory of the project
 with the following variables:
