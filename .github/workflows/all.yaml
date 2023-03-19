@@ -55,16 +55,16 @@ jobs:
      SSH_DEVOPS_KEY_PUBLIC: "${{ secrets.SSH_DEVOPS_KEY_PUBLIC }}"
      SSH_DEVOPS_KEY_PRIVATE: "${{ secrets.SSH_DEVOPS_KEY_PRIVATE }}"
 
-  # collect_static:
-  #   needs: test_django
-  #   uses: ./.github/workflows/collectstatic.yaml
-  #   secrets:
-  #     DJANGO_DEBUG: ${{ secrets.DJANGO_DEBUG }}
-  #     DJANGO_SECRET_KEY: "${{ secrets.DJANGO_SECRET_KEY }}"
-  #     OBJECT_STORAGE_BUCKET: "${{ secrets.OBJECT_STORAGE_BUCKET }}"
-  #     OBJECT_STORAGE_REGION: "${{ secrets.OBJECT_STORAGE_REGION }}"
-  #     OBJECT_STORAGE_ACCESS_KEY: "${{ secrets.OBJECT_STORAGE_ACCESS_KEY }}"
-  #     OBJECT_STORAGE_SECRET_KEY: "${{ secrets.OBJECT_STORAGE_SECRET_KEY }}"
-  #     DATABASE_BACKEND: "${{ secrets.DATABASE_BACKEND }}"
-  #     DJANGO_STORAGE_SERVICE: "${{ secrets.DJANGO_STORAGE_SERVICE }}"
-  #     DJANGO_ROOT_NAME: "${{ secrets.DJANGO_ROOT_NAME }}"
+  collect_static:
+    needs: test_django
+    uses: ./.github/workflows/collectstatic.yaml
+    secrets:
+      DJANGO_DEBUG: ${{ secrets.DJANGO_DEBUG }}
+      DJANGO_SECRET_KEY: "${{ secrets.DJANGO_SECRET_KEY }}"
+      OBJECT_STORAGE_BUCKET: "${{ secrets.OBJECT_STORAGE_BUCKET }}"
+      OBJECT_STORAGE_REGION: "${{ secrets.OBJECT_STORAGE_REGION }}"
+      OBJECT_STORAGE_ACCESS_KEY: "${{ secrets.OBJECT_STORAGE_ACCESS_KEY }}"
+      OBJECT_STORAGE_SECRET_KEY: "${{ secrets.OBJECT_STORAGE_SECRET_KEY }}"
+      DATABASE_BACKEND: "${{ secrets.DATABASE_BACKEND }}"
+      DJANGO_STORAGE_SERVICE: "${{ secrets.DJANGO_STORAGE_SERVICE }}"
+      DJANGO_ROOT_NAME: "${{ secrets.DJANGO_ROOT_NAME }}"
