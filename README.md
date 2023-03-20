@@ -1,6 +1,6 @@
 New items checklist:
     - Create new Virtual Environment
-        - python3 -m venv venv .
+        - python3 -m venv venv
         - source venv/bin/activate
         
     - Install requirements.txt
@@ -43,6 +43,12 @@ New items checklist:
         - ssh-keygen -t ed25519 
         other:
         - ssh -i ~/.ssh/id_ed25519 root@IP_ADDRESS
+    
+    - Update digitalocean.tf with names:
+        - Bucket name
+        - SSH key name 
+        - Droplet name
+
 
 
 A .env file is required in the root directory of the project
@@ -52,12 +58,11 @@ with the following variables:
     WEBAPP_NODE_HOST
     LOAD_BALANCER_HOST
     DATABASE_BACKEND
-    DJANGO_SECRET_KEY
     DJANGO_ROOT_NAME
     DJANGO_STORAGES_SERVICE
     OBJECT_STORAGE_ACCESS_KEY
     OBJECT_STORAGE_SECRET_KEY
-    OBJECT_STORAGE_ENDPOINT
+  
     OBJECT_STORAGE_REGION
     OBJECT_STORAGE_BUCKET
     OBJECT_STORAGE_DEVOPS_BUCKET
