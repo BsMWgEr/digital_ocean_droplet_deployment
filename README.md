@@ -283,3 +283,9 @@ from .storages.conf import *  # noqa
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
+**************** END Settings Template ******************
+Database SSL:
+https://www.vultr.com/docs/use-ssl-encryption-with-postgresql-on-ubuntu-20-04/
+
+Cron backups for Database:
+https://www.linode.com/docs/guides/back-up-a-postgresql-database/
